@@ -21,7 +21,7 @@ def handle_query():
 
     if intent == "location":
         # Extract place type and log
-        place_type = extract_place_type(user_input)
+        place_type = extract_place_type(user_input) or "restaurant"
         print(f"🔍 Place Type: {place_type}")
         
         places = get_places_nearby(location, place_type)

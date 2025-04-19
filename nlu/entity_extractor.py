@@ -1,6 +1,7 @@
 # nlu/entity_extractor.py
 
 def extract_place_type(user_input):
+    print(f"🟣 Received user input: {user_input}")
     # Normalize input to lowercase
     text = user_input.lower()
     
