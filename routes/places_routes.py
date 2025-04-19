@@ -13,14 +13,48 @@ def handle_query():
     user_input = data.get("query")
     location = data.get("location")  # "lat,lng"
 
+    # Debug logging to track the incoming query and location
+    print(f"🟡 User Input: {user_input}")
+    print(f"🟢 Location: {location}")
+
     intent = classify_intent(user_input)
+
+    # Log the intent classification
+    print(f"🔵 Intent: {intent}")
 
     if intent == "location":
         place_type = extract_place_type(user_input)
+
+        # Log the extracted place type
+        print(f"🟣 Extracted Place Type: {place_type}")
+
         places = get_places_nearby(location, place_type)
-        return jsonify({"response_type": "places", "places": places, "intent": intent})
+
+        # Log the places found
+        print(f"🟠 Places Found: {places}")
+
+        return jsonify({
+            "response_type": "places",
+            "places": places,
+            "intent": intent
+        })
+
     elif intent == "weather":
-        # Forward to weather handler
-        return jsonify({"response_type": "weather", "intent": intent})
+        # Log the weather intent handling
+        print("🌤️ Weather Intent Received")
+
+        # Forward to your weather handler if necessary
+        return jsonify({
+            "response_type": "weather",
+            "intent": intent
+        })
+
     else:
-        return jsonify({"response_type": "chat", "text": "Hello! How can I assist you today?", "intent": intent})
+        # Log the fallback response
+        print("💬 Fallback Chat Response")
+
+        return jsonify({
+            "response_type": "chat",
+            "text": "Hello! How can I assist you today?",
+            "intent": intent
+        })
