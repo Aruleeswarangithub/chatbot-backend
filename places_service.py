@@ -1,52 +1,51 @@
+# places_service.py
 import requests
-from config import GOOGLE_API_KEY
+from config import MAPBOX_API_KEY
 
-GOOGLE_PLACES_URL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+MAPBOX_GEOCODING_URL = "https://api.mapbox.com/geocoding/v5/mapbox.places"
 
-def get_places_nearby(location, place_type, radius=5000):
+def get_places_nearby(location, query, limit=10):
     """
-    Query Google Places API for nearby locations sorted by rating.
+    Query Mapbox Geocoding API for nearby places.
     Args:
-        location (str): "latitude,longitude"
-        place_type (str): e.g., 'cafe', 'restaurant', 'gas_station'
-        radius (int): search radius in meters
+        location (str): "lat,lng"
+        query (str): search query like 'hospital', 'restaurant'
+        limit (int): number of results
     Returns:
-        List of dicts with keys: name, address, rating, location
+        List of dicts with keys: name, address, rating (None), location
     """
+    lat, lng = location.split(',')
+
+    url = f"{MAPBOX_GEOCODING_URL}/{query}.json"
     params = {
-        'location': location,
-        'radius': radius,
-        'type': place_type,
-        'key': GOOGLE_API_KEY
+        'access_token': MAPBOX_API_KEY,
+        'proximity': f"{lng},{lat}",
+        'limit': limit
     }
-    resp = requests.get(GOOGLE_PLACES_URL, params=params)
+
+    resp = requests.get(url, params=params)
+    print(f"🔵 Mapbox Status: {resp.status_code}")
     
-    # Log HTTP status and response status
-    print(f"HTTP Status: {resp.status_code}")
-    data = resp.json()
-    print(f"API Response Status: {data.get('status')}")
-    
-    if resp.status_code != 200 or data.get('status') != 'OK':
-        print("Error: Failed to retrieve places.")
+    if resp.status_code != 200:
+        print("❌ Mapbox API failed.")
         return []
-    
-    results = data.get('results', [])
-    
-    # Log a sample of the results
-    if results:
-        print(f"Sample of Results: {results[0]}")
 
-    # Sort results by rating (descending)
-    results.sort(key=lambda x: x.get('rating', 0), reverse=True)
+    data = resp.json()
+    features = data.get('features', [])
 
-    # Simplify the response
+    print(f"🟢 Found {len(features)} results.")
+
     places = []
-    for place in results:
+    for feature in features:
+        coords = feature.get('center', [None, None])
         places.append({
-            'name': place.get('name'),
-            'address': place.get('vicinity'),
-            'rating': place.get('rating', 0),
-            'location': place.get('geometry', {}).get('location')
+            'name': feature.get('text', 'Unnamed'),
+            'address': feature.get('place_name', ''),
+            'rating': None,  # Mapbox doesn't provide ratings
+            'location': {
+                'lat': coords[1],
+                'lng': coords[0]
+            }
         })
-    
+
     return places
